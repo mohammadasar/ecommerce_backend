@@ -1,0 +1,104 @@
+package com.example.ecommerce_backend.Controller;
+
+
+
+import lombok.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.ecommerce_backend.Modal.User;
+import com.example.ecommerce_backend.Repo.UserRepository;
+import com.example.ecommerce_backend.Security.JwtUtil;
+
+import java.util.*;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authManager;
+
+    @Autowired
+    private UserRepository repo;
+
+    @Autowired
+    private PasswordEncoder encoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @PostMapping("/signup")
+    public String signup(@RequestBody SignupRequest req) {
+        if (repo.existsByUsername(req.getUsername())) {
+            return "Username already exists";
+        }
+
+        User user = new User();
+        user.setUsername(req.getUsername());
+        user.setPassword(encoder.encode(req.getPassword()));
+        user.setRoles(req.getRoles());
+
+        repo.save(user);
+        return "Signup successful";
+    }
+
+    @PostMapping("/login")
+    public Map<String, String> login(@RequestBody AuthRequest req) {
+        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
+        User user = repo.findByUsername(req.getUsername()).orElseThrow();
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRoles());
+
+        return Map.of("token", token);
+    }
+}
+
+@Data
+class AuthRequest {
+    private String username;
+    private String password;
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+    
+}
+
+@Data
+class SignupRequest {
+    private String username;
+    private String password;
+    private Set<String> roles;
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public Set<String> getRoles() {
+		return roles;
+	}
+	public void setRoles(Set<String> roles) {
+		this.roles = roles;
+	}
+    
+}
+
+
