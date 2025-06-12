@@ -5,7 +5,12 @@ package com.example.ecommerce_backend.Controller;
 import lombok.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,20 +36,37 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+//    @PostMapping("/signup")
+//    public String signup(@RequestBody SignupRequest req) {
+//        if (repo.existsByUsername(req.getUsername())) {
+//            return "Username already exists";
+//        }
+//
+//        User user = new User();
+//        user.setUsername(req.getUsername());
+//        user.setPassword(encoder.encode(req.getPassword()));
+//        user.setRoles(req.getRoles());
+//
+//        repo.save(user);
+//        return "Signup successful";
+//    }
     @PostMapping("/signup")
-    public String signup(@RequestBody SignupRequest req) {
-        if (repo.existsByUsername(req.getUsername())) {
-            return "Username already exists";
+    public ResponseEntity<String> registerUser(@RequestBody AuthRequest request) {
+        if (repo.findByUsername(request.getUsername()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
 
         User user = new User();
-        user.setUsername(req.getUsername());
-        user.setPassword(encoder.encode(req.getPassword()));
-        user.setRoles(req.getRoles());
+        user.setUsername(request.getUsername());
+        user.setPassword(encoder.encode(request.getPassword()));
+
+        // Set default role as USER
+        user.setRoles(Set.of("USER"));
 
         repo.save(user);
-        return "Signup successful";
+        return ResponseEntity.ok("Signup successful");
     }
+
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody AuthRequest req) {
@@ -54,7 +76,11 @@ public class AuthController {
 
         return Map.of("token", token);
     }
+    
+  
+
 }
+
 
 @Data
 class AuthRequest {
@@ -79,7 +105,15 @@ class AuthRequest {
 class SignupRequest {
     private String username;
     private String password;
+    private String email;
     private Set<String> roles;
+    
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
 	public String getUsername() {
 		return username;
 	}
