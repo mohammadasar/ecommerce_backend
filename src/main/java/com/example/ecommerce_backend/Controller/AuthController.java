@@ -58,14 +58,14 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail()); // ✅ Add this line
         user.setPassword(encoder.encode(request.getPassword()));
-
-        // Set default role as USER
         user.setRoles(Set.of("USER"));
 
         repo.save(user);
         return ResponseEntity.ok("Signup successful");
     }
+
 
 
     @PostMapping("/login")
@@ -86,6 +86,14 @@ public class AuthController {
 class AuthRequest {
     private String username;
     private String password;
+    private String email;
+    
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
 	public String getUsername() {
 		return username;
 	}
