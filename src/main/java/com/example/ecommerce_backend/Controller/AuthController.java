@@ -36,20 +36,23 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
 //    @PostMapping("/signup")
-//    public String signup(@RequestBody SignupRequest req) {
-//        if (repo.existsByUsername(req.getUsername())) {
-//            return "Username already exists";
+//    public ResponseEntity<String> registerUser(@RequestBody AuthRequest request) {
+//        if (repo.findByUsername(request.getUsername()).isPresent()) {
+//            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
 //        }
 //
 //        User user = new User();
-//        user.setUsername(req.getUsername());
-//        user.setPassword(encoder.encode(req.getPassword()));
-//        user.setRoles(req.getRoles());
+//        user.setUsername(request.getUsername());
+//        user.setEmail(request.getEmail()); // ✅ Add this line
+//        user.setPassword(encoder.encode(request.getPassword()));
+//        user.setRoles(Set.of("USER"));
 //
 //        repo.save(user);
-//        return "Signup successful";
+//        return ResponseEntity.ok("Signup successful");
 //    }
+    
     @PostMapping("/signup")
     public ResponseEntity<String> registerUser(@RequestBody AuthRequest request) {
         if (repo.findByUsername(request.getUsername()).isPresent()) {
@@ -58,13 +61,20 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail()); // ✅ Add this line
+        user.setEmail(request.getEmail());
         user.setPassword(encoder.encode(request.getPassword()));
-        user.setRoles(Set.of("USER"));
+
+        // ✅ Use roles from request, default to USER if null or empty
+        Set<String> roles = request.getRoles();
+        if (roles == null || roles.isEmpty()) {
+            roles = Set.of("USER");
+        }
+        user.setRoles(roles);
 
         repo.save(user);
         return ResponseEntity.ok("Signup successful");
     }
+
 
 
 
@@ -87,6 +97,8 @@ class AuthRequest {
     private String username;
     private String password;
     private String email;
+    private Set<String> roles;
+    
     
 	public String getEmail() {
 		return email;
@@ -106,6 +118,13 @@ class AuthRequest {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	public Set<String> getRoles() {
+		return roles;
+	}
+	public void setRoles(Set<String> roles) {
+		this.roles = roles;
+	}
+	
     
 }
 
