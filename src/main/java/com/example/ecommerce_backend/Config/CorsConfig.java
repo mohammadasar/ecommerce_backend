@@ -19,7 +19,8 @@ public class CorsConfig {
         config.setAllowedOrigins(List.of(
         	    "http://localhost:8080",
         	    "http://localhost:5173",
-        	    "http://127.0.0.1:5500"
+        	    "http://127.0.0.1:5500",
+        	   "https://devwerxoil.netlify.app"
         	));
         config.setAllowedHeaders(List.of("Origin", "Content-Type", "Accept", "Authorization"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

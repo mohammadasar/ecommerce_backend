@@ -27,7 +27,8 @@ import java.io.IOException;
 import org.springframework.util.StringUtils;
 
 
-@CrossOrigin(origins = "http://127.0.0.1:5500")
+//@CrossOrigin(origins = "http://127.0.0.1:5500")
+@CrossOrigin(origins = "https://devwerxoil.netlify.app")
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
