@@ -18,6 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.example.ecommerce_backend.Config.CloudinaryConfig;
 import com.example.ecommerce_backend.Modal.Product;
 import com.example.ecommerce_backend.Modal.User;
 import com.example.ecommerce_backend.Repo.ProductRepository;
@@ -36,6 +39,11 @@ public class AdminController {
 	    private ProductRepository productRepository;
 
 	  private final String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        
+	  
+	  @Autowired
+	  private Cloudinary cloudinary;
+
 
 	
 	  @Autowired
@@ -70,34 +78,58 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
     
+//    @PostMapping("/upload")
+//    public Product uploadProduct(@RequestParam("image") MultipartFile image,
+//    	                       	 @RequestParam("category") String category,
+//                                 @RequestParam("title") String title,
+//                                 @RequestParam("description") String description,
+//                                 @RequestParam("price") double price,
+//                                 @RequestParam("quantity") int quantity) throws IOException {
+//
+//        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
+//
+//        File uploadPath = new File(uploadDir);
+//        if (!uploadPath.exists()) {
+//            uploadPath.mkdirs(); // Create the directory if it doesn't exist
+//        }
+//
+//        File file = new File(uploadPath, filename);
+//        image.transferTo(file);
+//
+//        Product product = new Product();
+//        product.setCategory(category);
+//        product.setTitle(title);
+//        product.setDescription(description);
+//        product.setPrice(price);
+//        product.setQuantity(quantity);
+//        product.setImageUrl("/uploads/" + filename);
+//
+//        return productRepository.save(product);
+//    }
     @PostMapping("/upload")
     public Product uploadProduct(@RequestParam("image") MultipartFile image,
-    	                       	 @RequestParam("category") String category,
+                                 @RequestParam("category") String category,
                                  @RequestParam("title") String title,
                                  @RequestParam("description") String description,
                                  @RequestParam("price") double price,
                                  @RequestParam("quantity") int quantity) throws IOException {
 
-        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
+        // ✅ Upload image to Cloudinary
+        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+        String imageUrl = uploadResult.get("secure_url").toString();
 
-        File uploadPath = new File(uploadDir);
-        if (!uploadPath.exists()) {
-            uploadPath.mkdirs(); // Create the directory if it doesn't exist
-        }
-
-        File file = new File(uploadPath, filename);
-        image.transferTo(file);
-
+        // ✅ Create and save product with Cloudinary image URL
         Product product = new Product();
         product.setCategory(category);
         product.setTitle(title);
         product.setDescription(description);
         product.setPrice(price);
         product.setQuantity(quantity);
-        product.setImageUrl("/uploads/" + filename);
+        product.setImageUrl(imageUrl);  // ✅ Use Cloudinary URL here
 
         return productRepository.save(product);
     }
+
 
     // READ All Products
     @GetMapping("/products")
@@ -113,7 +145,6 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // UPDATE Product by ID
     @PutMapping("/products/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable String id,
                                                  @RequestParam(value = "image", required = false) MultipartFile image,
@@ -132,14 +163,15 @@ public class AdminController {
 
             if (image != null && !image.isEmpty()) {
                 try {
-                    String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
-                    File uploadPath = new File(uploadDir);
-                    if (!uploadPath.exists()) uploadPath.mkdirs();
-                    File file = new File(uploadPath, filename);
-                    image.transferTo(file);
-                    product.setImageUrl("/uploads/" + filename);
+                    // ✅ Upload image to Cloudinary
+                    Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+
+                    // ✅ Get secure URL from Cloudinary response
+                    String imageUrl = uploadResult.get("secure_url").toString();
+
+                    product.setImageUrl(imageUrl);
                 } catch (IOException e) {
-                    throw new RuntimeException("Image upload failed", e);
+                    throw new RuntimeException("Image upload to Cloudinary failed", e);
                 }
             }
 
