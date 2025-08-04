@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import com.example.ecommerce_backend.Modal.Product;
 import com.example.ecommerce_backend.Modal.User;
 import com.example.ecommerce_backend.Repo.ProductRepository;
 import com.example.ecommerce_backend.Repo.UserRepository;
+import com.example.ecommerce_backend.Service.UserService;
 
 import java.io.IOException;
 import org.springframework.util.StringUtils;
@@ -35,6 +37,10 @@ import org.springframework.util.StringUtils;
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
+	
+	@Autowired
+    private UserService userService;
+	
 	  @Autowired
 	    private ProductRepository productRepository;
 
@@ -59,10 +65,26 @@ public class AdminController {
   
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return ResponseEntity.ok(users);
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
     }
+    
+    @GetMapping("/{id}")
+    public Optional<User> getUserById(@PathVariable String id) {
+        return userService.getUserById(id);
+    }
+
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable String id, @RequestBody User user) {
+        return userService.updateUser(id, user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable String id) {
+        userService.deleteUser(id);
+    }
+    
+   
     
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
@@ -78,57 +100,57 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
     
-//    @PostMapping("/upload")
-//    public Product uploadProduct(@RequestParam("image") MultipartFile image,
-//    	                       	 @RequestParam("category") String category,
-//                                 @RequestParam("title") String title,
-//                                 @RequestParam("description") String description,
-//                                 @RequestParam("price") double price,
-//                                 @RequestParam("quantity") int quantity) throws IOException {
-//
-//        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
-//
-//        File uploadPath = new File(uploadDir);
-//        if (!uploadPath.exists()) {
-//            uploadPath.mkdirs(); // Create the directory if it doesn't exist
-//        }
-//
-//        File file = new File(uploadPath, filename);
-//        image.transferTo(file);
-//
-//        Product product = new Product();
-//        product.setCategory(category);
-//        product.setTitle(title);
-//        product.setDescription(description);
-//        product.setPrice(price);
-//        product.setQuantity(quantity);
-//        product.setImageUrl("/uploads/" + filename);
-//
-//        return productRepository.save(product);
-//    }
     @PostMapping("/upload")
     public Product uploadProduct(@RequestParam("image") MultipartFile image,
-                                 @RequestParam("category") String category,
+    	                       	 @RequestParam("category") String category,
                                  @RequestParam("title") String title,
                                  @RequestParam("description") String description,
                                  @RequestParam("price") double price,
                                  @RequestParam("quantity") int quantity) throws IOException {
 
-        // ✅ Upload image to Cloudinary
-        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
-        String imageUrl = uploadResult.get("secure_url").toString();
+        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
 
-        // ✅ Create and save product with Cloudinary image URL
+        File uploadPath = new File(uploadDir);
+        if (!uploadPath.exists()) {
+            uploadPath.mkdirs(); // Create the directory if it doesn't exist
+        }
+
+        File file = new File(uploadPath, filename);
+        image.transferTo(file);
+
         Product product = new Product();
         product.setCategory(category);
         product.setTitle(title);
         product.setDescription(description);
         product.setPrice(price);
         product.setQuantity(quantity);
-        product.setImageUrl(imageUrl);  // ✅ Use Cloudinary URL here
+        product.setImageUrl("/uploads/" + filename);
 
         return productRepository.save(product);
     }
+//    @PostMapping("/upload")
+//    public Product uploadProduct(@RequestParam("image") MultipartFile image,
+//                                 @RequestParam("category") String category,
+//                                 @RequestParam("title") String title,
+//                                 @RequestParam("description") String description,
+//                                 @RequestParam("price") double price,
+//                                 @RequestParam("quantity") int quantity) throws IOException {
+//
+//        // ✅ Upload image to Cloudinary
+//        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+//        String imageUrl = uploadResult.get("secure_url").toString();
+//
+//        // ✅ Create and save product with Cloudinary image URL
+//        Product product = new Product();
+//        product.setCategory(category);
+//        product.setTitle(title);
+//        product.setDescription(description);
+//        product.setPrice(price);
+//        product.setQuantity(quantity);
+//        product.setImageUrl(imageUrl);  // ✅ Use Cloudinary URL here
+//
+//        return productRepository.save(product);
+//    }
 
 
     // READ All Products

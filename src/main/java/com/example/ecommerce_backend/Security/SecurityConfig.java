@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login", "/auth/signup").permitAll()
 //                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin/**", "/uploads/**").permitAll()
+                        .requestMatchers("/api/orders/**").permitAll()
+                        .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/upload", "/", "/index.html", "/error", "/images/**").permitAll()
 
 //                        .requestMatchers("/admin/**").hasRole("ADMIN")
