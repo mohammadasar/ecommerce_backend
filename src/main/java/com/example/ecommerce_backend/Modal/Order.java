@@ -2,20 +2,32 @@ package com.example.ecommerce_backend.Modal;
 
 
 
+import java.time.LocalDateTime;
+
+
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Document
-public class order {
+public class Order {
     @Id
     private String id;
-
     private String productName;
     private double price;
     private int quantity;
     private String orderId;          // Razorpay Order ID
     private String paymentId;        // Razorpay Payment ID
+    private String paymentType;
     private String status;           // paid / failed / pending
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm")
+    private LocalDateTime orderDate;
+    
+    private String userId;  // ✅ Link Order with User
+    
 	public String getId() {
 		return id;
 	}
@@ -58,6 +70,27 @@ public class order {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+	public String getPaymentType() {
+		return paymentType;
+	}
+	public void setPaymentType(String paymentType) {
+		this.paymentType = paymentType;
+	}
+	public LocalDateTime getOrderDate() {
+		return orderDate;
+	}
+	public void setOrderDate(LocalDateTime orderDate) {
+		this.orderDate = orderDate;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	
+	
 
     // Getters and Setters
     

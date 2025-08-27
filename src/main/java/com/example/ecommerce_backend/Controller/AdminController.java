@@ -29,6 +29,8 @@ import com.example.ecommerce_backend.Repo.UserRepository;
 import com.example.ecommerce_backend.Service.UserService;
 
 import java.io.IOException;
+import java.security.Principal;
+
 import org.springframework.util.StringUtils;
 
 
@@ -84,6 +86,40 @@ public class AdminController {
         userService.deleteUser(id);
     }
     
+//  get user  address details
+    
+    // Update address for logged-in user
+    @PutMapping("/update-address")
+    public ResponseEntity<?> updateAddress(@RequestBody User updatedInfo, Principal principal) {
+        String username = principal.getName(); // from JWT
+        return userRepository.findByUsername(username).map(user -> {
+            user.setFullName(updatedInfo.getFullName());
+            user.setPhone(updatedInfo.getPhone());
+            user.setAltPhone(updatedInfo.getAltPhone());
+            user.setPincode(updatedInfo.getPincode());
+            user.setAddress(updatedInfo.getAddress());
+            user.setState(updatedInfo.getState());
+            user.setDistrict(updatedInfo.getDistrict());
+            userRepository.save(user);
+            return ResponseEntity.ok("Address updated successfully");
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+
+    // Get saved address for logged-in user
+    @GetMapping("/get-address/{userId}")
+    public ResponseEntity<?> getAddress(@PathVariable String userId) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    Map<String, String> addressData = new HashMap<>();
+                    addressData.put("fullName", user.getFullName());
+                    addressData.put("phone", user.getPhone());
+                    addressData.put("address", user.getAddress());
+                    return ResponseEntity.ok(addressData);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
    
     
     @GetMapping("/me")
