@@ -17,8 +17,12 @@ import org.springframework.web.bind.annotation.*;
 import com.example.ecommerce_backend.Modal.User;
 import com.example.ecommerce_backend.Repo.UserRepository;
 import com.example.ecommerce_backend.Security.JwtUtil;
+import com.example.ecommerce_backend.Service.TokenBlacklistService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/auth")
@@ -53,18 +57,41 @@ public class AuthController {
 //        return ResponseEntity.ok("Signup successful");
 //    }
     
+//    @PostMapping("/signup")
+//    public ResponseEntity<String> registerUser(@RequestBody AuthRequest request) {
+//        if (repo.findByUsername(request.getUsername()).isPresent()) {
+//            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+//        }
+//
+//        User user = new User();
+//        user.setUsername(request.getUsername());
+//        user.setEmail(request.getEmail());
+//        user.setPassword(encoder.encode(request.getPassword()));
+//
+//        // ✅ Use roles from request, default to USER if null or empty
+//        Set<String> roles = request.getRoles();
+//        if (roles == null || roles.isEmpty()) {
+//            roles = Set.of("USER");
+//        }
+//        user.setRoles(roles);
+//
+//        repo.save(user);
+//        return ResponseEntity.ok("Signup successful");
+//    }
+
     @PostMapping("/signup")
-    public ResponseEntity<String> registerUser(@RequestBody AuthRequest request) {
+    public ResponseEntity<?> registerUser(@RequestBody AuthRequest request) {
         if (repo.findByUsername(request.getUsername()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
 
+        // 1. Create new user
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(encoder.encode(request.getPassword()));
 
-        // ✅ Use roles from request, default to USER if null or empty
+        // ✅ Default role USER if not provided
         Set<String> roles = request.getRoles();
         if (roles == null || roles.isEmpty()) {
             roles = Set.of("USER");
@@ -72,22 +99,86 @@ public class AuthController {
         user.setRoles(roles);
 
         repo.save(user);
-        return ResponseEntity.ok("Signup successful");
-    }
 
+        // 2. Authenticate new user immediately
+        authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
 
-
-
-    @PostMapping("/login")
-    public Map<String, String> login(@RequestBody AuthRequest req) {
-        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
-        User user = repo.findByUsername(req.getUsername()).orElseThrow();
+        // 3. Generate JWT token
         String token = jwtUtil.generateToken(user.getUsername(), user.getRoles());
 
-        return Map.of("token", token);
+        // 4. Return response with token and user details
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Signup successful");
+        response.put("token", token);
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("roles", user.getRoles());
+
+        return ResponseEntity.ok(response);
     }
+
+
+
+//    @PostMapping("/login")
+//    public Map<String, String> login(@RequestBody AuthRequest req) {
+//        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
+//        User user = repo.findByUsername(req.getUsername()).orElseThrow();
+//        String token = jwtUtil.generateToken(user.getUsername(), user.getRoles());
+//
+//        return Map.of("token", token);
+//    }
+//    
     
-  
+    @PostMapping("/login")
+    public Map<String, Object> login(@RequestBody AuthRequest req) {
+        // Authenticate user
+        authManager.authenticate(
+            new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
+        );
+
+        // Fetch user
+        User user = repo.findByUsername(req.getUsername()).orElseThrow();
+
+        // Generate JWT token
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRoles());
+
+        // Return response with token + user details
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("roles", user.getRoles());
+
+        return response;
+    }
+
+    
+//    logout section----->
+
+    private final TokenBlacklistService blacklistService;
+
+    public AuthController(TokenBlacklistService blacklistService) {
+        this.blacklistService = blacklistService;
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            blacklistService.blacklistToken(token);
+            return ResponseEntity.ok("Logged out successfully");
+        }
+        return ResponseEntity.badRequest().body("No token found");
+    }
+
+
+
+ 
+
 
 }
 
