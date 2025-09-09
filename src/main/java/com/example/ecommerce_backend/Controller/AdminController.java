@@ -34,9 +34,9 @@ import java.security.Principal;
 import org.springframework.util.StringUtils;
 
 
-@CrossOrigin(origins = "http://127.0.0.1:5500")
+//@CrossOrigin(origins = "http://127.0.0.1:5500")
 
-//@CrossOrigin(origins = "https://devwerxoil.netlify.app")
+@CrossOrigin(origins = "https://devwerxoil.netlify.app")
 
 @RestController
 @RequestMapping("/admin")
@@ -138,6 +138,8 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
     
+    
+//    this is for local database
 //    @PostMapping("/upload")
 //    public Product uploadProduct(@RequestParam("image") MultipartFile image,
 //    	                       	 @RequestParam("category") String category,
@@ -167,6 +169,8 @@ public class AdminController {
 //        return productRepository.save(product);
 //    }
     
+    
+//    this is for cloudinary
     @PostMapping("/upload")
     public Product uploadProduct(@RequestParam("image") MultipartFile image,
                                  @RequestParam("category") String category,
