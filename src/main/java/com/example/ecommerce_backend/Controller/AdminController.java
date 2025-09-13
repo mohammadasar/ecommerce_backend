@@ -37,8 +37,8 @@ import java.security.Principal;
 import org.springframework.util.StringUtils;
 
 
-@CrossOrigin(origins = "http://127.0.0.1:5500")
-//@CrossOrigin(origins = "https://devwerxoil.netlify.app")
+//@CrossOrigin(origins = "http://127.0.0.1:5500")
+@CrossOrigin(origins = "https://devwerxoil.netlify.app")
 
 @RestController
 @RequestMapping("/admin")
@@ -174,60 +174,60 @@ public class AdminController {
     
     
 //    this is for local database
-    @PostMapping("/upload")
-    public Product uploadProduct(@RequestParam("image") MultipartFile image,
-    	                       	 @RequestParam("category") String category,
-                                 @RequestParam("title") String title,
-                                 @RequestParam("description") String description,
-                                 @RequestParam("price") double price,
-                                 @RequestParam("quantity") int quantity) throws IOException {
-
-        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
-
-        File uploadPath = new File(uploadDir);
-        if (!uploadPath.exists()) {
-            uploadPath.mkdirs(); // Create the directory if it doesn't exist
-        }
-
-        File file = new File(uploadPath, filename);
-        image.transferTo(file);
-
-        Product product = new Product();
-        product.setCategory(category);
-        product.setTitle(title);
-        product.setDescription(description);
-        product.setPrice(price);
-        product.setQuantity(quantity);
-        product.setImageUrl("/uploads/" + filename);
-
-        return productRepository.save(product);
-    }
-    
-    
-//    this is for cloudinary
 //    @PostMapping("/upload")
 //    public Product uploadProduct(@RequestParam("image") MultipartFile image,
-//                                 @RequestParam("category") String category,
+//    	                       	 @RequestParam("category") String category,
 //                                 @RequestParam("title") String title,
 //                                 @RequestParam("description") String description,
 //                                 @RequestParam("price") double price,
 //                                 @RequestParam("quantity") int quantity) throws IOException {
 //
-//        // ✅ Upload image to Cloudinary
-//        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
-//        String imageUrl = uploadResult.get("secure_url").toString();
+//        String filename = UUID.randomUUID() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
 //
-//        // ✅ Create and save product with Cloudinary image URL
+//        File uploadPath = new File(uploadDir);
+//        if (!uploadPath.exists()) {
+//            uploadPath.mkdirs(); // Create the directory if it doesn't exist
+//        }
+//
+//        File file = new File(uploadPath, filename);
+//        image.transferTo(file);
+//
 //        Product product = new Product();
 //        product.setCategory(category);
 //        product.setTitle(title);
 //        product.setDescription(description);
 //        product.setPrice(price);
 //        product.setQuantity(quantity);
-//        product.setImageUrl(imageUrl);  // ✅ Use Cloudinary URL here
+//        product.setImageUrl("/uploads/" + filename);
 //
 //        return productRepository.save(product);
 //    }
+    
+    
+//    this is for cloudinary
+    @PostMapping("/upload")
+    public Product uploadProduct(@RequestParam("image") MultipartFile image,
+                                 @RequestParam("category") String category,
+                                 @RequestParam("title") String title,
+                                 @RequestParam("description") String description,
+                                 @RequestParam("price") double price,
+                                 @RequestParam("quantity") int quantity) throws IOException {
+
+        // ✅ Upload image to Cloudinary
+        Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+        String imageUrl = uploadResult.get("secure_url").toString();
+
+        // ✅ Create and save product with Cloudinary image URL
+        Product product = new Product();
+        product.setCategory(category);
+        product.setTitle(title);
+        product.setDescription(description);
+        product.setPrice(price);
+        product.setQuantity(quantity);
+        product.setImageUrl(imageUrl);  // ✅ Use Cloudinary URL here
+
+        return productRepository.save(product);
+    }
 
 
     // READ All Products
