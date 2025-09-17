@@ -23,12 +23,13 @@ import com.example.ecommerce_backend.Modal.Order;
 import com.example.ecommerce_backend.Modal.User;
 import com.example.ecommerce_backend.Repo.OrderRepository;
 import com.example.ecommerce_backend.Repo.UserRepository;
+import com.example.ecommerce_backend.RequestDto.OrderRequestDto;
 import com.example.ecommerce_backend.Service.InvoiceService;
 import com.example.ecommerce_backend.Service.UserService;
 
 @RestController
 //@CrossOrigin(origins = "http://127.0.0.1:5500")
-@CrossOrigin(origins = "https://devwerxoil.netlify.app")
+@CrossOrigin(origins = "https://devwerxoil.netl/ify.app")
 @RequestMapping("/api/orders")
 public class OrderController {
 
@@ -101,7 +102,35 @@ public class OrderController {
                 .body(new InputStreamResource(pdf));
     }
     
-  
+    @PostMapping("/save-bulk")
+    public ResponseEntity<?> saveBulkOrder(@RequestBody OrderRequestDto orderRequest, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        String username = principal.getName();
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+        // Save each product as a separate Order document
+        for (OrderRequestDto.ProductItem item : orderRequest.getProducts()) {
+            Order order = new Order();
+            order.setUserId(user.getId());
+            order.setProductName(item.getName());
+            order.setPrice(item.getPrice());
+            order.setQuantity(item.getQuantity());
+            order.setOrderDate(LocalDateTime.now());
+            order.setPaymentType(orderRequest.getPaymentType());
+            order.setStatus(orderRequest.getStatus());
+            order.setOrderId(orderRequest.getOrderId());   // for Razorpay
+            order.setPaymentId(orderRequest.getPaymentId()); // for Razorpay
+
+            orderRepo.save(order);
+        }
+
+        return ResponseEntity.ok("Order placed successfully!");
+    }
+
 
 
 }
