@@ -1,6 +1,7 @@
 package com.example.ecommerce_backend.Repo;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,4 +11,5 @@ import com.example.ecommerce_backend.Modal.Order;
 
 public interface OrderRepository extends MongoRepository<Order, String> {
 	 List<Order> findByUserId(String userId);
+	 List<Order> findByOrderDateBetweenAndStatus(LocalDateTime startDate, LocalDateTime endDate, String status);
 }
