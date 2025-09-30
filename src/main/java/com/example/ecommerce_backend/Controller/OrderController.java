@@ -107,7 +107,8 @@ public class OrderController {
         Order savedOrder = orderRepo.save(order);
 
         // ✅ Build WhatsApp message
-        String invoiceLink = "http://localhost:8080/api/orders/" + savedOrder.getId() + "/invoice";
+//        String invoiceLink = "http://localhost:8080/api/orders/" + savedOrder.getId() + "/invoice";
+        String invoiceLink = "https://ecommerce-backend-wnu9.onrender.com/api/orders/" + savedOrder.getId() + "/invoice";
         String messageText = "Hello " + user.getUsername() +
                 ", your order has been placed successfully!\n\n" +
                 "🛒 Product: " + savedOrder.getProductName() + "\n" +
